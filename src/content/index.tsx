@@ -2,8 +2,37 @@ import browser from 'webextension-polyfill';
 import { axiosInstance } from '../utils';
 import { LogEntry, MessageRequest } from '../utils/types';
 
-// Observe mutation only after page fully loaded
+// Throttle function to limit the rate of axios requests
+const throttle = <T extends (...args: any[]) => void>(func: T, limit: number) => {
+  let lastFunc: ReturnType<typeof setTimeout>;
+  let lastRan: number | undefined;
 
+  return (...args: Parameters<T>) => {
+    if (lastRan === undefined) {
+      func(...args);
+      lastRan = Date.now();
+    } else {
+      clearTimeout(lastFunc);
+      lastFunc = setTimeout(() => {
+        if (Date.now() - lastRan! >= limit) {
+          func(...args);
+          lastRan = Date.now();
+        }
+      }, limit - (Date.now() - lastRan!));
+    }
+  };
+};
+
+// Throttled post request function
+const throttledPost = throttle((logEntry: LogEntry) => {
+  axiosInstance.post('/alert', {
+    ...logEntry,
+    website_url: window.location.host,
+    type: logEntry.type,
+  });
+}, 100); // Adjust the throttle limit (1000ms) as needed
+
+// Observe mutation only after page fully loaded
 const observer = new MutationObserver((mutationsList: MutationRecord[]) => {
   mutationsList.forEach((mutation: MutationRecord) => {
     // Initialize a log entry object for post
@@ -43,11 +72,8 @@ const observer = new MutationObserver((mutationsList: MutationRecord[]) => {
     }
 
     // Post mutation to backend server
-    axiosInstance.post('/alert', {
-      ...logEntry,
-      website_url: window.location.host,
-      type: mutation.type,
-    });
+    // Post mutation to backend server using throttled function
+    throttledPost(logEntry);
   });
 });
 
