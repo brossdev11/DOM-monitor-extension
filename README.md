@@ -68,3 +68,7 @@ Then run the following:
 - `yarn clean` to remove dist folder. `build` command call this command.
 - `yarn format` to fix code with eslint and prettier.
 - `yarn lint` to call ESLint and Prettier.
+
+### How to use
+
+- It's simple to use, just click extension icon to start monitor DOM change. Click again to stop monitoring.
