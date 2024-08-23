@@ -30,7 +30,7 @@ const throttledPost = throttle((logEntry: LogEntry) => {
     website_url: window.location.host,
     type: logEntry.type,
   });
-}, 100); // Adjust the throttle limit (1000ms) as needed
+}, 300); // Adjust the throttle limit (1000ms) as needed
 
 // Observe mutation only after page fully loaded
 const observer = new MutationObserver((mutationsList: MutationRecord[]) => {
